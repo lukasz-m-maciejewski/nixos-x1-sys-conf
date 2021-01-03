@@ -59,7 +59,6 @@
       defaultSession = "xfce+i3";
     };
     desktopManager = {
-      default = "xfce";
       xterm.enable = false;
       xfce = {
         enable = true;
