@@ -64,7 +64,6 @@
       Section "InputClass"
           Identifier         "Touchscreen catchall"
           MatchIsTouchscreen "on"
-
           Option "Ignore" "on"
       EndSection
     '';
@@ -77,12 +76,16 @@
   # Enable CUPS to print documents.
   services.printing = {
     enable = true;
-    drivers = [ pkgs.brlaser ];
+    drivers = [ pkgs.brlaser pkgs.brgenml1lpr ];
   };
 
   # Enable sound.
   sound.enable = true;
   hardware.pulseaudio.enable = true;
+  hardware.pulseaudio.package = pkgs.pulseaudioFull;
+
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput = {
@@ -104,8 +107,8 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    wget
-    git
+    lxappearance
+    gitAndTools.gitFull
     htop
     which
     rxvt_unicode
@@ -115,15 +118,62 @@
     gnumake
     jdk11
     ntfs3g
+    lshw
+    usbutils
+    pciutils
+    dmidecode
+    lm_sensors
+    smartmontools
+
+    iotop
+    iftop
+    wget
+    curl
+    tcpdump
+    telnet
+    whois
+
+    file
+    lsof
+    xclip
+    rsync
+    tree
+
+    xz
+    lz4
+    zip
+    unzip
+
+    inotify-tools
   ];
 
-  fonts.fonts = with pkgs; [ nerdfonts source-code-pro terminus_font ];
+  fonts = {
+    enableDefaultFonts = true;
+    enableFontDir = true;
 
-  fonts.fontconfig = {
-    dpi = 120;
-    antialias = true;
-    subpixel.lcdfilter = "light";
-    hinting.enable = true;
+    fonts = with pkgs; [
+      nerdfonts
+      source-code-pro
+      terminus_font
+      fira-mono
+      libertine
+      open-sans
+      twemoji-color-font
+      liberation_ttf
+    ];
+
+    fontconfig = {
+      dpi = 120;
+      antialias = true;
+      subpixel.lcdfilter = "light";
+      hinting.enable = true;
+      defaultFonts = {
+        monospace = [ "Iosevka Term" ];
+        serif = [ "Linux Libertine" ];
+        sansSerif = [ "Open Sans" ];
+        emoji = [ "Twitter Color Emoji" ];
+      };
+    };
   };
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -136,6 +186,8 @@
   # List services that you want to enable:
   services.openssh.enable = true;
   services.autorandr.enable = true;
+
+  documentation.dev.enable = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
