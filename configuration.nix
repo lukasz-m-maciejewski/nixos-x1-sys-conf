@@ -1,13 +1,11 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
-
 { config, pkgs, ... }:
 
 {
   imports = [ # Include the results of the hardware scan.
     ./hardware-configuration.nix
   ];
+
+  hardware.cpu.intel.updateMicrocode = true;
 
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
@@ -34,21 +32,6 @@
 
   environment.pathsToLink = [ "/libexec" ];
 
-  # services.xserver.enable = true;
-  # services.xserver.layout = "pl";
-  # services.xserver.dpi = 120;
-  # services.xserver.xkbOptions = "ctrl:nocaps";
-  # services.xserver.desktopManager.xterm.enable = false;
-  # services.xserver.displayManager.lightdm.enable = true;
-  # services.xserver.displayManager.defaultSession = "none+i3";
-  # services.xserver.windowManager.i3 = {
-  #   enable = true;
-  #   package = pkgs.i3-gaps;
-  #   extraPackages = with pkgs; [ dmenu rofi i3status i3lock i3blocks ];
-  #   extraSessionCommands = ''
-  #     ${pkgs.xorg.xrdb}/bin/xrdb -merge ~/.Xresources
-  #   '';
-  # };
   services.xserver = {
     enable = true;
     layout = "pl";
@@ -68,7 +51,7 @@
     };
     windowManager.i3 = {
       enable = true;
-      package = pkgs.i3-gaps;
+      # package = pkgs.i3-gaps;
       extraPackages = with pkgs; [ dmenu rofi i3status i3lock i3blocks ];
       extraSessionCommands = ''
         ${pkgs.xorg.xrdb}/bin/xrdb -merge ~/.Xresources
@@ -76,17 +59,26 @@
     };
   };
 
+  environment.etc."X11/xorg.conf.d/99-no-touchscreen.conf" = {
+    text = ''
+      Section "InputClass"
+          Identifier         "Touchscreen catchall"
+          MatchIsTouchscreen "on"
+
+          Option "Ignore" "on"
+      EndSection
+    '';
+  };
+
   programs.dconf.enable = true;
-
-  # services.xserver.displayManager.gdm.enable = true;
-  # services.xserver.desktopManager.gnome3.enable = true;
-
-  # Configure keymap in X11
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e";
+  programs.nm-applet.enable = true;
+  virtualisation.docker.enable = true;
 
   # Enable CUPS to print documents.
-  services.printing.enable = true;
+  services.printing = {
+    enable = true;
+    drivers = [ pkgs.brlaser ];
+  };
 
   # Enable sound.
   sound.enable = true;
@@ -99,55 +91,30 @@
     accelSpeed = "0.5";
   };
 
-  services.autorandr.enable = true;
-
-  #xsession.pointerCursor = {
-  #  name = "Vanilla-DMZ";
-  #  package = pkgs.vanilla-dmz;
-  #  size = 128;
-  #};
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.lukaszm = {
     createHome = true;
     isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "audio"
-      "disk"
-    ]; # Enable ‘sudo’ for the user.
+    extraGroups =
+      [ "wheel" "networkmanager" "video" "audio" "disk" "dialout" "docker" ];
     uid = 1000;
   };
-
   nixpkgs.config.allowUnfree = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     wget
-    vim
-    firefox
-    emacs
     git
     htop
-    networkmanagerapplet
     which
-    tmux
     rxvt_unicode
     terminator
-    xfce.thunar
-    ripgrep
-    fd
-    shellcheck
     cmake
     gcc10
     gnumake
-    ledger
-    nixfmt
-    sbcl
     jdk11
+    ntfs3g
   ];
 
   fonts.fonts = with pkgs; [ nerdfonts source-code-pro terminus_font ];
@@ -161,16 +128,14 @@
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+  };
 
   # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+  services.autorandr.enable = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
